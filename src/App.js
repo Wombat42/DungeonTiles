@@ -13,6 +13,8 @@ import {
   faAlignLeft
 } from "@fortawesome/free-solid-svg-icons";
 import "./styles.css";
+import Level1 from "./maps/l1";
+
 library.add(
   faCheckSquare,
   faCoffee,
@@ -24,13 +26,12 @@ library.add(
   faAlignLeft
 );
 
-const TilePrim = styled.div`
+const Grid = styled.div`
   background-color: rgb(88, 88, 88);
   margin-left: auto;
   margin-right: auto;
   display: grid;
-  grid-template-columns: repeat(5, 16px);
-  width: 80px;
+  grid-template-columns: repeat(66, 16px);
 `;
 
 const Title = styled.h1``;
@@ -51,6 +52,10 @@ const Shadow = styled.div`
 
 const Space = styled.div`
   background-color: rgb(78, 78, 78);
+`;
+
+const MapWrapper = styled.div`
+  overflow: scroll;
 `;
 
 function Wall({ variant }) {
@@ -75,131 +80,36 @@ function Wall({ variant }) {
   );
 }
 
-function TileA() {
+function Map({ level = [] }) {
   return (
-    <TilePrim>
-      <Wall variant="left" />
-      <Wall />
-      <Wall />
-      <Wall />
-      <Wall variant="right" />
-
-      <Wall variant="center" />
-      <Space />
-      <Space />
-      <Space />
-      <Wall variant="center" />
-      <Wall />
-      <Space />
-      <Space />
-      <Space />
-      <Wall />
-      <Wall variant="center" />
-      <Space />
-      <Space />
-      <Space />
-      <Wall variant="center" />
-
-      <Wall variant="right" />
-      <Space />
-      <Space />
-      <Space />
-      <Wall variant="left" />
-    </TilePrim>
+    <Grid>
+      {level.map((row) => {
+        const tiles = [];
+        const len = row.length;
+        console.log("length", len);
+        for (let x = 0; x < len; x++) {
+          let tileChar = row.charAt(x);
+          switch (tileChar) {
+            case "x":
+              tiles.push(<Wall />);
+              break;
+            default:
+              tiles.push(<Space />);
+          }
+        }
+        return tiles;
+      })}
+    </Grid>
   );
-}
-function TileB() {
-  return (
-    <TilePrim>
-      <Wall variant="left" />
-      <Space />
-      <Space />
-      <Space />
-      <Wall variant="right" />
-
-      <Wall variant="center" />
-      <Space />
-      <Space />
-      <Space />
-      <Wall variant="center" />
-      <Wall />
-      <Space />
-      <Space />
-      <Space />
-      <Wall />
-      <Wall variant="center" />
-      <Space />
-      <Space />
-      <Space />
-      <Wall variant="center" />
-
-      <Wall variant="right" />
-      <Wall />
-      <Wall />
-      <Wall />
-      <Wall variant="left" />
-    </TilePrim>
-  );
-}
-function TileEmpty() {
-  return (
-    <TilePrim>
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-      <Space />
-    </TilePrim>
-  );
-}
-
-function Tile({ variant }) {
-  let tile;
-  switch (variant) {
-    case "A":
-      tile = <TileA />;
-      break;
-    case "B":
-      tile = <TileB />;
-      break;
-    default:
-      tile = <TileEmpty />;
-      break;
-  }
-  return tile;
 }
 
 export default function App() {
   return (
     <div className="App">
       <Title>Making D&D Tiles with FontAwesome</Title>
-      <Tile variant="A" />
-      <Tile />
-      <Tile variant="B" />
+      <MapWrapper>
+        <Map level={Level1} />
+      </MapWrapper>
     </div>
   );
 }
