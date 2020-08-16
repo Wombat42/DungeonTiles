@@ -53,8 +53,11 @@ const Shadow = styled.div`
   color: ${(props) => props.theme.colors.wall};
   filter: ${(props) => {
     const shadows = [];
-    for (let x = 0; x < 6; x++) {
-      const sh = `drop-shadow( 1px 1px 0px ${props.theme.colors.backgroundShadow})`;
+    const max = 6;
+    for (let x = 0; x < max; x++) {
+      const sh = `drop-shadow( 1px 1px ${x + 1 === max ? 1 : 0.25}px ${
+        props.theme.colors.backgroundShadow
+      })`;
       shadows.push(sh);
     }
     return shadows.join(" ") + ";";
