@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
+import seedRandom from "seedrandom";
 import {
   faCheckSquare,
   faCoffee,
@@ -10,10 +11,17 @@ import {
   faAlignJustify,
   faAlignRight,
   faAlignCenter,
-  faAlignLeft
+  faAlignLeft,
 } from "@fortawesome/free-solid-svg-icons";
+
+import { faSquare as farSquare } from "@fortawesome/free-regular-svg-icons";
 import "./styles.css";
 import Level1 from "./maps/l1";
+const rng = seedRandom("hey");
+
+function getRandomWallVariant() {
+  return Math.floor(rng() * Math.floor(4));
+}
 
 library.add(
   faCheckSquare,
@@ -27,56 +35,65 @@ library.add(
 );
 
 const Grid = styled.div`
-  background-color: rgb(88, 88, 88);
+  background-color: ${(props) => props.theme.colors.floorBackground};
   margin-left: auto;
   margin-right: auto;
   display: grid;
   grid-template-columns: repeat(66, 16px);
+  transform: scale(2);
 `;
 
 const Title = styled.h1``;
-
 const Shadow = styled.div`
-  background-color: rgb(88, 88, 88);
-  color: rgb(67, 66, 66);
-  filter: drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 0px rgba(88, 88, 88, 90%))
-    drop-shadow(1px 1px 3px rgba(66, 66, 66, 90%));
-`;
-
-const Space = styled.div`
-  background-color: rgb(78, 78, 78);
+  z-index: 10;
+  & > * {
+    z-index: 10;
+  }
+  background-color: ${(props) => props.theme.colors.background};
+  color: ${(props) => props.theme.colors.wall};
+  filter: ${(props) => {
+    const shadows = [];
+    for (let x = 0; x < 6; x++) {
+      const sh = `drop-shadow( 1px 1px 0px ${props.theme.colors.backgroundShadow})`;
+      shadows.push(sh);
+    }
+    return shadows.join(" ") + ";";
+  }};
 `;
 
 const MapWrapper = styled.div`
   overflow: scroll;
 `;
 
+const Floor = styled(({ className }) => {
+  return (
+    <div className={className}>
+      <FontAwesomeIcon icon={farSquare} />
+    </div>
+  );
+})`
+  font-size: 0.75rem;
+  color: ${(props) => props.theme.colors.floor};
+  background-color: ${(props) => props.theme.colors.floorBackground};
+  & > * {
+    z-index: 1;
+    //filter: blur(1px);
+    vertical-align: middle;
+  }
+`;
+
 function Wall({ variant }) {
   let type = "align-justify";
-  switch (variant) {
-    case "left":
-      type = "align-right";
-      break;
-    case "right":
-      type = "align-left";
-      break;
-    case "center":
-      type = "align-center";
-      break;
-    default:
-      type = "align-justify";
+  const types = ["align-right", "align-left", "align-center", "align-justify"];
+  if (typeof variant === "number") {
+    type = types[variant];
   }
   return (
-    <Shadow>
-      <FontAwesomeIcon icon={type} />
-    </Shadow>
+    <div>
+      <Shadow>
+        <FontAwesomeIcon icon={type} />
+      </Shadow>
+    </div>
   );
 }
 
@@ -91,10 +108,10 @@ function Map({ level = [] }) {
           let tileChar = row.charAt(x);
           switch (tileChar) {
             case "x":
-              tiles.push(<Wall />);
+              tiles.push(<Wall key={x} variant={getRandomWallVariant()} />);
               break;
             default:
-              tiles.push(<Space />);
+              tiles.push(<Floor key={x} />);
           }
         }
         return tiles;
