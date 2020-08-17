@@ -1,125 +1,97 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { library } from "@fortawesome/fontawesome-svg-core";
 import seedRandom from "seedrandom";
-import {
-  faCheckSquare,
-  faCoffee,
-  faCheck,
-  faSquare,
-  faAlignJustify,
-  faAlignRight,
-  faAlignCenter,
-  faAlignLeft,
-} from "@fortawesome/free-solid-svg-icons";
-
-import { faSquare as farSquare } from "@fortawesome/free-regular-svg-icons";
 import "./styles.css";
 import Level1 from "./maps/l1";
+import { Wall } from "./sprites/walls";
+import { Floor } from "./sprites/floors";
+import { Empty, Thing } from "./sprites/misc";
+
 const rng = seedRandom("hey");
 
 function getRandomWallVariant() {
   return Math.floor(rng() * Math.floor(4));
 }
+function getRandomFloorVariant() {
+  return Math.floor(rng() * Math.floor(5));
+}
 
-library.add(
-  faCheckSquare,
-  faCoffee,
-  faCheck,
-  faSquare,
-  faAlignJustify,
-  faAlignRight,
-  faAlignCenter,
-  faAlignLeft
-);
-
-const Grid = styled.div`
-  background-color: ${(props) => props.theme.colors.floorBackground};
-  margin-left: auto;
-  margin-right: auto;
-  display: grid;
-  grid-template-columns: repeat(66, 16px);
-  transform: scale(2);
-`;
-
-const Title = styled.h1``;
-const Shadow = styled.div`
-  z-index: 10;
-  & > * {
-    z-index: 10;
-  }
-  background-color: ${(props) => props.theme.colors.background};
-  color: ${(props) => props.theme.colors.wall};
-  filter: ${(props) => {
-    const shadows = [];
-    const max = 6;
-    for (let x = 0; x < max; x++) {
-      const sh = `drop-shadow( 1px 1px ${x + 1 === max ? 1 : 0.25}px ${
-        props.theme.colors.backgroundShadow
-      })`;
-      shadows.push(sh);
-    }
-    return shadows.join(" ") + ";";
-  }};
-`;
-
-const MapWrapper = styled.div`
-  overflow: scroll;
-`;
-
-const Floor = styled(({ className }) => {
+const GridWrap = styled(({ index, className, children }) => {
   return (
-    <div className={className}>
-      <FontAwesomeIcon icon={farSquare} />
+    <div className={className} style={{ zIndex: index }}>
+      {children}
     </div>
   );
 })`
-  font-size: 0.75rem;
-  color: ${(props) => props.theme.colors.floor};
-  background-color: ${(props) => props.theme.colors.floorBackground};
-  & > * {
-    z-index: 1;
-    //filter: blur(1px);
-    vertical-align: middle;
-  }
+  grid-area: 1/1/1/1;
+  position: relative;
+  top: 0;
+  left: 0;
 `;
 
-function Wall({ variant }) {
-  let type = "align-justify";
-  const types = ["align-right", "align-left", "align-center", "align-justify"];
-  if (typeof variant === "number") {
-    type = types[variant];
-  }
-  return (
-    <div>
-      <Shadow>
-        <FontAwesomeIcon icon={type} />
-      </Shadow>
-    </div>
-  );
-}
+const Grid = styled(({ className, children }) => {
+  return <div className={className}>{children}</div>;
+})`
+  display: grid;
+  grid-template-columns: repeat(66, 16px);
+  grid-auto-rows: 16px;
+`;
+
+const Title = styled.h1``;
+
+const MapWrapper = styled.div`
+  width: 50vw;
+  overflow: scroll;
+  display: grid;
+  grid-column-template: 1fr;
+  position: relative;
+`;
+
+const WALL_LAYER = 1;
+const OBJECT_LAYER = 2;
+const FLOOR_LAYER = 0;
 
 function Map({ level = [] }) {
-  return (
-    <Grid>
-      {level.map((row) => {
-        const tiles = [];
-        const len = row.length;
-        console.log("length", len);
-        for (let x = 0; x < len; x++) {
-          let tileChar = row.charAt(x);
-          switch (tileChar) {
-            case "x":
-              tiles.push(<Wall key={x} variant={getRandomWallVariant()} />);
-              break;
-            default:
-              tiles.push(<Floor key={x} />);
-          }
+  const [layers, setLayers] = useState([]);
+
+  useEffect(() => {
+    const tmpLayers = [[], [], []];
+    level.forEach((row, index) => {
+      let wallLayer, floorLayer, objectLayer;
+      for (let x = 0; x < row.length; x++) {
+        const key = index * 100 + x;
+        wallLayer = floorLayer = objectLayer = <Empty key={key} />;
+        let tileChar = row.charAt(x);
+        switch (tileChar) {
+          case "x":
+            wallLayer = <Wall key={key} variant={getRandomWallVariant()} />;
+            break;
+          case "t":
+            objectLayer = <Thing key={key} />;
+            floorLayer = <Floor key={key} variant={getRandomFloorVariant()} />;
+            break;
+          default:
+            floorLayer = <Floor key={key} variant={getRandomFloorVariant()} />;
+            break;
         }
-        return tiles;
+        tmpLayers[WALL_LAYER].push(wallLayer);
+        tmpLayers[OBJECT_LAYER].push(objectLayer);
+        tmpLayers[FLOOR_LAYER].push(floorLayer);
+      }
+    });
+    setLayers(tmpLayers);
+  }, [level]);
+
+  return (
+    <>
+      {layers.map((layer, index) => {
+        return (
+          <GridWrap key={index} index={index}>
+            <Grid>{layer}</Grid>
+          </GridWrap>
+        );
       })}
-    </Grid>
+    </>
   );
 }
 
